@@ -1,0 +1,122 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  OPERATEUR
+  QUALITE
+  ADMIN
+}
+
+enum StatutLot {
+  EN_ATTENTE
+  VALIDE
+  BLOQUE
+  QUARANTAINE
+  RAPPELE
+}
+
+enum TypeMouvement {
+  RECEPTION
+  TRANSFORMATION
+  FRACTIONNEMENT
+  RECOMBINAISON
+  STOCKAGE
+  EXPEDITION
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  nom       String
+  role      Role     @default(OPERATEUR)
+  createdAt DateTime @default(now())
+
+  controles Controle[]
+  audits    AuditLog[]
+}
+
+model Lot {
+  id             String    @id @default(uuid())
+  code           String    @unique
+  produit        String
+  origine        String
+  campagne       String
+  quantite       Float
+  statut         StatutLot @default(EN_ATTENTE)
+  datePeremption DateTime?
+  qrCodeUrl      String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  // Lien parent/enfant (fractionnement / recombinaison)
+  parentId String?
+  parent   Lot?    @relation("LotHierarchy", fields: [parentId], references: [id])
+  enfants  Lot[]   @relation("LotHierarchy")
+
+  mouvements Mouvement[]
+  controles  Controle[]
+  documents  Document[]
+  rappels    Rappel[]
+}
+
+model Mouvement {
+  id        String         @id @default(uuid())
+  type      TypeMouvement
+  details   String?
+  lotId     String
+  lot       Lot            @relation(fields: [lotId], references: [id])
+  createdAt DateTime       @default(now())
+}
+
+model Controle {
+  id           String   @id @default(uuid())
+  lotId        String
+  lot          Lot      @relation(fields: [lotId], references: [id])
+  temperature  Float?
+  aciditee     Float?
+  humidite     Float?
+  resultat     String   // "CONFORME" | "NON_CONFORME"
+  photoUrl     String?
+  latitude     Float?
+  longitude    Float?
+  operateurId  String
+  operateur    User     @relation(fields: [operateurId], references: [id])
+  createdAt    DateTime @default(now())
+}
+
+model Document {
+  id            String    @id @default(uuid())
+  lotId         String
+  lot           Lot       @relation(fields: [lotId], references: [id])
+  nom           String
+  url           String
+  version       Int       @default(1)
+  dateExpiration DateTime?
+  createdAt     DateTime  @default(now())
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  action    String
+  cible     String   // ex: "Lot:uuid"
+  details   String?
+  createdAt DateTime @default(now())
+}
+
+model Rappel {
+  id         String   @id @default(uuid())
+  lotId      String
+  lot        Lot      @relation(fields: [lotId], references: [id])
+  motif      String
+  statut     String   @default("EN_COURS") // EN_COURS, TERMINE
+  createdAt  DateTime @default(now())
+}
