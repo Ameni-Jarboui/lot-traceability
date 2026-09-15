@@ -30,3 +30,8 @@ app.listen(PORT, () => {
 });
 const lotsRouter = require('./routes/lots');
 app.use('/api/lots', lotsRouter);
+const authRouter = require('./routes/auth');
+const controlesRouter = require('./routes/controles');
+
+app.use('/api/auth', authRouter);
+app.use('/api/controles', controlesRouter);
