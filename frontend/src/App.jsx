@@ -4,7 +4,7 @@ import Login from './pages/Login';
 import LotsList from './pages/LotsList';
 import LotCreate from './pages/LotCreate';
 import LotDetail from './pages/LotDetail';
-
+import ControleTerrain from './pages/ControleTerrain';
 function PrivateRoute({ children }) {
   const { user } = useAuth();
   return user ? children : <Navigate to="/login" />;
@@ -20,10 +20,11 @@ function App() {
           <Route path="/lots/nouveau" element={<PrivateRoute><LotCreate /></PrivateRoute>} />
           <Route path="/lots/:id" element={<PrivateRoute><LotDetail /></PrivateRoute>} />
           <Route path="*" element={<Navigate to="/lots" />} />
+          <Route path="/scan" element={<PrivateRoute><ControleTerrain /></PrivateRoute>}/>
         </Routes>
       </BrowserRouter>
     </AuthProvider>
   );
 }
 
-export default App; 
+export default App;

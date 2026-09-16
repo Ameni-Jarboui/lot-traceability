@@ -66,4 +66,41 @@ router.post('/:lotId', verifyToken, async(req, res) => {
     }
 });
 
+// Contrôle par code de lot (utile pour le flux scan mobile)
+router.post('/by-code/:lotCode', async(req, res) => {
+    try {
+        const { lotCode } = req.params;
+        const lot = await prisma.lot.findUnique({ where: { code: lotCode } });
+        if (!lot) return res.status(404).json({ error: 'Lot introuvable pour ce code' });
+
+        const { temperature, aciditee, humidite, photoUrl, latitude, longitude } = req.body;
+
+        const evaluation = evaluerControle({ temperature, aciditee, humidite, datePeremption: lot.datePeremption });
+
+        const controle = await prisma.controle.create({
+            data: {
+                lotId: lot.id,
+                temperature,
+                aciditee,
+                humidite,
+                photoUrl,
+                latitude,
+                longitude,
+                resultat: evaluation.conforme ? 'CONFORME' : 'NON_CONFORME',
+                // fallback si pas d'auth stricte sur mobile : pas de req.user car pas de verifyToken sur cette route
+                operateurId: (req.user && req.user.id) || null,
+            },
+        });
+
+        await prisma.lot.update({
+            where: { id: lot.id },
+            data: { statut: evaluation.conforme ? 'VALIDE' : 'BLOQUE' },
+        });
+
+        res.status(201).json({ controle, evaluation });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
 module.exports = router;
