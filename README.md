@@ -200,3 +200,35 @@ Une fois connecté en Admin, la page `/utilisateurs` permet de gérer tous les r
 - `.env.example` (backend + frontend) sans secrets
 - Jeu de données de démonstration
 - Vidéo de démonstration : *[lien à compléter]*
+---
+
+## 📸 Captures d'écran
+
+### Interface de test API (Postman)
+![Capture 1](./images/capture1.PNG)
+
+![Capture 2](./images/capture2.PNG)
+
+![Capture 3](./images/Capture3.PNG)
+
+![Capture 4](./images/Capture4.PNG)
+
+![Capture 5](./images/Capture5.PNG)
+
+![Capture 6](./images/Capture6.PNG)
+
+![Capture 7](./images/Capture7.PNG)
+
+![Capture 8](./images/Capture8.PNG)
+
+![Capture 9](./images/Capture9.PNG)
+
+![Capture 10](./images/Capture10.PNG)
+
+![Capture 11](./images/Capture11.PNG)
+
+![Capture 12](./images/Capture12.PNG)
+
+![Capture 13](./images/Capture13.PNG)
+![Capture 14](./images/Capture13.PNG)
+![Capture 15](./images/Capture13.PNG)
