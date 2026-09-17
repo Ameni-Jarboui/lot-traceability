@@ -1,33 +1,52 @@
-import { createContext, useContext, useState } from 'react';
+import { createContext, useContext, useEffect, useState } from 'react';
+import { api } from '../api/client';
 
-const AuthContext = createContext();
+const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(() => {
-    const saved = localStorage.getItem('user');
-    return saved ? JSON.parse(saved) : null;
-  });
+  const [user, setUser] = useState(null);
+  const [ready, setReady] = useState(false);
 
-  const login = (token, userData) => {
-    localStorage.setItem('token', token);
-    localStorage.setItem('user', JSON.stringify(userData));
-    setUser(userData);
-  };
+  useEffect(() => {
+    const savedUser = localStorage.getItem('zen_user');
+    const token = localStorage.getItem('zen_token');
+    if (savedUser && token) {
+      setUser(JSON.parse(savedUser));
+    }
+    setReady(true);
+  }, []);
 
-  const logout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
+  function persist(token, user) {
+    localStorage.setItem('zen_token', token);
+    localStorage.setItem('zen_user', JSON.stringify(user));
+    setUser(user);
+  }
+
+  async function login(email, password) {
+    const data = await api.login(email, password);
+    persist(data.token, data.user);
+    return data.user;
+  }
+
+  async function register(payload) {
+    const data = await api.register(payload);
+    persist(data.token, data.user);
+    return data.user;
+  }
+
+  function logout() {
+    localStorage.removeItem('zen_token');
+    localStorage.removeItem('zen_user');
     setUser(null);
-  };
+  }
 
   return (
-    <AuthContext.Provider value={{ user, login, logout }}>
+    <AuthContext.Provider value={{ user, ready, login, register, logout }}>
       {children}
     </AuthContext.Provider>
   );
 }
 
-// eslint-disable-next-line react-refresh/only-export-components
 export function useAuth() {
   return useContext(AuthContext);
 }

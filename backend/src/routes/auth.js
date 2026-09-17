@@ -6,7 +6,6 @@ const { generateToken } = require('../utils/auth');
 
 const prisma = new PrismaClient();
 
-// Inscription (utile pour créer tes premiers comptes de test)
 router.post('/register', async(req, res) => {
     try {
         const { email, password, nom, role } = req.body;
@@ -16,7 +15,7 @@ router.post('/register', async(req, res) => {
 
         const hashedPassword = await bcrypt.hash(password, 10);
         const user = await prisma.user.create({
-            data: { email, password: hashedPassword, nom, role: role || 'OPERATEUR' },
+            data: { email, password: hashedPassword, nom, role: 'OPERATEUR' },
         });
 
         const token = generateToken(user);
@@ -26,7 +25,6 @@ router.post('/register', async(req, res) => {
     }
 });
 
-// Connexion
 router.post('/login', async(req, res) => {
     try {
         const { email, password } = req.body;

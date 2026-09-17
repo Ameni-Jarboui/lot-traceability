@@ -1,37 +1,31 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
-const { PrismaClient } = require('@prisma/client');
+
+const lotsRouter = require('./routes/lots');
+const authRouter = require('./routes/auth');
+const controlesRouter = require('./routes/controles');
+const rappelsRouter = require('./routes/rappels');
+const usersRouter = require('./routes/users');
+const documentsRouter = require('./routes/documents');
 
 const app = express();
-const prisma = new PrismaClient();
 
 app.use(cors());
 app.use(express.json());
 
-// Route de test
 app.get('/api/health', (req, res) => {
     res.json({ status: 'ok', message: 'API is running' });
 });
+app.use('/api/documents', documentsRouter);
 
-// Route de test DB
-app.get('/api/lots', async(req, res) => {
-    try {
-        const lots = await prisma.lot.findMany();
-        res.json(lots);
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-});
+app.use('/api/lots', lotsRouter);
+app.use('/api/auth', authRouter);
+app.use('/api/controles', controlesRouter);
+app.use('/api/rappels', rappelsRouter);
+app.use('/api/users', usersRouter);
 
 const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
 });
-const lotsRouter = require('./routes/lots');
-app.use('/api/lots', lotsRouter);
-const authRouter = require('./routes/auth');
-const controlesRouter = require('./routes/controles');
-
-app.use('/api/auth', authRouter);
-app.use('/api/controles', controlesRouter);

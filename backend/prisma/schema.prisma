@@ -55,7 +55,6 @@ model Lot {
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
 
-  // Lien parent/enfant (fractionnement / recombinaison)
   parentId String?
   parent   Lot?    @relation("LotHierarchy", fields: [parentId], references: [id])
   enfants  Lot[]   @relation("LotHierarchy")
@@ -82,12 +81,14 @@ model Controle {
   temperature Float?
   aciditee    Float?
   humidite    Float?
-  resultat    String   // "CONFORME" | "NON_CONFORME"
+  resultat    String
   photoUrl    String?
   latitude    Float?
   longitude   Float?
   operateurId String?
   operateur   User?    @relation(fields: [operateurId], references: [id])
+  valide      Boolean  @default(false)
+  valideParId String?
   createdAt   DateTime @default(now())
 }
 
@@ -107,7 +108,7 @@ model AuditLog {
   userId    String
   user      User     @relation(fields: [userId], references: [id])
   action    String
-  cible     String   // ex: "Lot:uuid"
+  cible     String
   details   String?
   createdAt DateTime @default(now())
 }
@@ -117,6 +118,6 @@ model Rappel {
   lotId     String
   lot       Lot      @relation(fields: [lotId], references: [id])
   motif     String
-  statut    String   @default("EN_COURS") // EN_COURS, TERMINE
+  statut    String   @default("EN_COURS")
   createdAt DateTime @default(now())
 }

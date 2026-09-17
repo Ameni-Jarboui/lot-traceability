@@ -1,4 +1,3 @@
-// Seuils configurables (tu peux les sortir dans un fichier config ou DB plus tard)
 const SEUILS = {
     temperature: { min: 2, max: 25 },
     aciditee: { min: 0, max: 0.8 },
@@ -7,23 +6,29 @@ const SEUILS = {
 
 function evaluerControle({ temperature, aciditee, humidite, datePeremption }) {
     const raisons = [];
+    const raisonsCritiques = [];
 
     if (temperature != null && (temperature < SEUILS.temperature.min || temperature > SEUILS.temperature.max)) {
-        raisons.push(`Température hors seuil (${temperature}°C)`);
+        raisonsCritiques.push(`Température hors seuil (${temperature}°C)`);
     }
     if (aciditee != null && aciditee > SEUILS.aciditee.max) {
-        raisons.push(`Acidité trop élevée (${aciditee})`);
+        raisons.push(`Acidité légèrement élevée (${aciditee})`);
     }
     if (humidite != null && humidite > SEUILS.humidite.max) {
-        raisons.push(`Humidité trop élevée (${humidite}%)`);
+        raisons.push(`Humidité légèrement élevée (${humidite}%)`);
     }
     if (datePeremption && new Date(datePeremption) < new Date()) {
-        raisons.push('Date de péremption dépassée');
+        raisonsCritiques.push('Date de péremption dépassée');
     }
 
+    let statut = 'CONFORME';
+    if (raisonsCritiques.length > 0) statut = 'NON_CONFORME';
+    else if (raisons.length > 0) statut = 'A_VERIFIER';
+
     return {
-        conforme: raisons.length === 0,
-        raisons,
+        conforme: statut === 'CONFORME',
+        statut, // CONFORME | A_VERIFIER | NON_CONFORME
+        raisons: [...raisonsCritiques, ...raisons],
     };
 }
 

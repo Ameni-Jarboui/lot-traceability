@@ -1,13 +1,13 @@
 const express = require('express');
 const router = express.Router();
 const { PrismaClient } = require('@prisma/client');
-const { verifyToken } = require('../utils/auth');
+const { verifyToken, requireRole } = require('../utils/auth');
 const { evaluerControle } = require('../utils/qualityRules');
 const { logAudit } = require('../utils/audit');
 
 const prisma = new PrismaClient();
 
-// Créer un contrôle qualité pour un lot
+// Créer un contrôle qualité pour un lot (par id)
 router.post('/:lotId', verifyToken, async(req, res) => {
     try {
         const { lotId } = req.params;
@@ -37,13 +37,12 @@ router.post('/:lotId', verifyToken, async(req, res) => {
             },
         });
 
-        // Si non conforme -> bloquer le lot + créer mouvement + audit
-        if (!evaluation.conforme) {
-            await prisma.lot.update({
-                where: { id: lotId },
-                data: { statut: 'BLOQUE' },
-            });
+        await prisma.lot.update({
+            where: { id: lotId },
+            data: { statut: evaluation.conforme ? 'VALIDE' : 'BLOQUE' },
+        });
 
+        if (!evaluation.conforme) {
             await prisma.mouvement.create({
                 data: {
                     type: 'TRANSFORMATION',
@@ -51,11 +50,6 @@ router.post('/:lotId', verifyToken, async(req, res) => {
                     lotId,
                 },
             });
-
-            // Ici tu appelleras ton webhook n8n pour l'email (Étape 5)
-            // await fetch(process.env.N8N_WEBHOOK_ALERTE, { method: 'POST', body: JSON.stringify({ lot, raisons: evaluation.raisons }) });
-        } else {
-            await prisma.lot.update({ where: { id: lotId }, data: { statut: 'VALIDE' } });
         }
 
         await logAudit(req.user.id, 'CREATION_CONTROLE', `Lot:${lotId}`, JSON.stringify(evaluation));
@@ -66,8 +60,8 @@ router.post('/:lotId', verifyToken, async(req, res) => {
     }
 });
 
-// Contrôle par code de lot (utile pour le flux scan mobile)
-router.post('/by-code/:lotCode', async(req, res) => {
+// Contrôle par code de lot (flux scan mobile) — authentifié aussi
+router.post('/by-code/:lotCode', verifyToken, async(req, res) => {
     try {
         const { lotCode } = req.params;
         const lot = await prisma.lot.findUnique({ where: { code: lotCode } });
@@ -87,17 +81,31 @@ router.post('/by-code/:lotCode', async(req, res) => {
                 latitude,
                 longitude,
                 resultat: evaluation.conforme ? 'CONFORME' : 'NON_CONFORME',
-                // fallback si pas d'auth stricte sur mobile : pas de req.user car pas de verifyToken sur cette route
-                operateurId: (req.user && req.user.id) || null,
+                operateurId: req.user.id,
             },
         });
 
+        const statutMap = { CONFORME: 'VALIDE', A_VERIFIER: 'QUARANTAINE', NON_CONFORME: 'BLOQUE' };
         await prisma.lot.update({
-            where: { id: lot.id },
-            data: { statut: evaluation.conforme ? 'VALIDE' : 'BLOQUE' },
+            where: { id: lotId },
+            data: { statut: statutMap[evaluation.statut] },
         });
 
         res.status(201).json({ controle, evaluation });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Valider officiellement un contrôle — Qualité et Admin uniquement
+router.patch('/:id/valider', verifyToken, requireRole('QUALITE', 'ADMIN'), async(req, res) => {
+    try {
+        const controle = await prisma.controle.update({
+            where: { id: req.params.id },
+            data: { valide: true, valideParId: req.user.id },
+        });
+        await logAudit(req.user.id, 'VALIDATION_CONTROLE', `Controle:${req.params.id}`);
+        res.json(controle);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
