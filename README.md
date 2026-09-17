@@ -1,14 +1,12 @@
-# ZEN — Traçabilité Intelligente des Lots
+# Traçabilité Intelligente des Lots
 
-Plateforme de suivi des lots agroalimentaires (huile d'olive, dattes...) du producteur au produit fini : origine, contrôles qualité, transformation, stock et rappel ciblé en cas d'incident.
-
-**Test technique ZEN Group — Fullstack AI / Automation — Série A · Choix A2**
+Application web de suivi des lots agroalimentaires (huile d'olive, dattes...) du producteur au produit fini : origine, contrôles qualité, transformation, stock et rappel ciblé en cas d'incident.
 
 ---
 
-## 🗺️ Comprendre l'application en 2 minutes
+## 🗺️ Présentation du projet
 
-Un lot naît à la **réception fournisseur** avec un code unique et un QR code. Il traverse ensuite un cycle de vie :
+Un lot naît à la **réception fournisseur** avec un code unique et un QR code généré automatiquement. Il traverse ensuite un cycle de vie complet :
 
 ```
 Réception ──▶ Contrôle qualité ──▶ Fractionnement (optionnel) ──▶ Recombinaison (optionnel) ──▶ Rappel (si incident)
@@ -17,16 +15,16 @@ Réception ──▶ Contrôle qualité ──▶ Fractionnement (optionnel) ─
  EN_ATTENTE    VALIDE / QUARANTAINE / BLOQUE                                                     RAPPELE
 ```
 
-- Un **contrôle qualité** (température, acidité, humidité) évalue automatiquement le lot et met à jour son statut.
+- Un **contrôle qualité** (température, acidité, humidité) évalue automatiquement le lot et met à jour son statut selon des seuils configurables.
 - Un lot peut être **fractionné** en plusieurs sous-lots (traçabilité parent → enfants) ou plusieurs lots peuvent être **recombinés** en un seul.
-- En cas de non-conformité grave, un **rappel** identifie automatiquement tous les lots descendants concernés.
+- En cas de non-conformité grave, un **rappel** identifie automatiquement, de façon récursive, tous les lots descendants concernés.
 - Chaque lot conserve une **timeline immuable** (mouvements, contrôles, documents) consultable via son QR code.
 
 ---
 
 ## 👥 Rôles et permissions
 
-L'accès est contrôlé par rôle à la fois côté backend (middleware `requireRole`) et côté frontend (masquage des actions non autorisées) :
+L'accès est contrôlé par rôle, appliqué à la fois côté backend (middleware de vérification de rôle) et côté frontend (masquage des actions non autorisées) :
 
 | Action | Opérateur | Qualité | Admin |
 |---|:---:|:---:|:---:|
@@ -42,7 +40,7 @@ L'accès est contrôlé par rôle à la fois côté backend (middleware `require
 ## 🏗️ Architecture technique
 
 ```
-zen-project/
+projet/
 ├── backend/                  Node.js + Express + Prisma + PostgreSQL
 │   ├── prisma/
 │   │   ├── schema.prisma     Modèle de données
@@ -64,7 +62,7 @@ zen-project/
 
 ---
 
-## ✅ Fonctionnalités
+## ✅ Fonctionnalités développées
 
 ### Gestion des lots
 - Création d'un lot avec génération automatique d'un **code unique** et d'un **QR code**
@@ -137,7 +135,7 @@ npm run dev              # démarre sur http://localhost:4000
 
 `.env.example` :
 ```
-DATABASE_URL="postgresql://user:password@localhost:5432/zen_db?schema=public"
+DATABASE_URL="postgresql://user:password@localhost:5432/lots_db?schema=public"
 PORT=4000
 JWT_SECRET=your_jwt_secret_here
 ```
@@ -195,10 +193,10 @@ Une fois connecté en Admin, la page `/utilisateurs` permet de gérer tous les r
 
 ---
 
-## 🎥 Livrables
+## 📁 Livrables
 
 - Application déployée : *[lien à compléter]*
 - Dépôt Git avec historique de commits : *[lien à compléter]*
 - `.env.example` (backend + frontend) sans secrets
 - Jeu de données de démonstration
-- Vidéo de démonstration (3–5 min) : *[lien à compléter]*
+- Vidéo de démonstration : *[lien à compléter]*
